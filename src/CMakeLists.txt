@@ -11,36 +11,36 @@ set(SOURCE_FILES
 	"internal/TrotateXYZ.h"
 )
 
-if (APPLE AND ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -stdlib=libstdc++")
-endif()
-
 set(MAYA_ANIMATION_INCLUDE ${PROJECT_SOURCE_DIR}/src CACHE INTERNAL "${PROJECT_NAME}: Include Directories" FORCE)
-if (ANIMX_BUILD_SHARED)
-    add_library(${PROJECT_NAME}_shared SHARED ${SOURCE_FILES})
-    set_target_properties(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
-    set_target_properties(${PROJECT_NAME}_shared PROPERTIES COMPILE_DEFINITIONS ANIMX_EXPORT)
+
+add_library(${PROJECT_NAME}_shared SHARED ${SOURCE_FILES})
+target_include_directories(${PROJECT_NAME}_shared PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(${PROJECT_NAME}_shared PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+set_target_properties(${PROJECT_NAME}_shared PROPERTIES COMPILE_DEFINITIONS ANIMX_EXPORT)
+
+add_library(${PROJECT_NAME}_static STATIC ${SOURCE_FILES})
+target_include_directories(${PROJECT_NAME}_static PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+set_target_properties(${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
+if (MSVC)
+    set_target_properties(${PROJECT_NAME}_static PROPERTIES PREFIX lib)
 endif()
-if (ANIMX_BUILD_STATIC)
-    add_library(${PROJECT_NAME}_static STATIC ${SOURCE_FILES})
-    set_target_properties(${PROJECT_NAME}_static PROPERTIES OUTPUT_NAME ${PROJECT_NAME})
-    if (MSVC)
-        set_target_properties(${PROJECT_NAME}_static PROPERTIES PREFIX lib)
-    endif()
-    set_target_properties(${PROJECT_NAME}_static PROPERTIES COMPILE_DEFINITIONS ANIMX_STATIC)
+set_target_properties(${PROJECT_NAME}_static PROPERTIES COMPILE_DEFINITIONS ANIMX_STATIC)
+
+if(NOT ANIMX_BUILD_SHARED)
+    set_target_properties(${PROJECT_NAME}_shared PROPERTIES EXCLUDE_FROM_ALL TRUE)
+endif()
+if(NOT ANIMX_BUILD_STATIC)
+    set_target_properties(${PROJECT_NAME}_static PROPERTIES EXCLUDE_FROM_ALL TRUE)
 endif()
 
 install(FILES animx.h DESTINATION include)
 
-if (ANIMX_BUILD_SHARED)
-    install(TARGETS ${PROJECT_NAME}_shared
+install(TARGETS ${PROJECT_NAME}_shared
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION .
         RUNTIME DESTINATION bin)
-endif()
-if (ANIMX_BUILD_STATIC)
-    install(TARGETS ${PROJECT_NAME}_static
+
+install(TARGETS ${PROJECT_NAME}_static
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION .
         RUNTIME DESTINATION bin)
-endif()
